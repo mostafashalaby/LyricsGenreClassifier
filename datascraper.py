@@ -56,11 +56,11 @@ def get_lyrics_category(genius, artist_track_list, genre, songs_data):
                 track_lyrics = song.lyrics
                 print("Lyrics: ", song.lyrics)
             else:
-                print(f"Lyrics not found for song: {track} by {artist}. Skipping...")
+                print(f"Lyrics not found for song: {track} by {artist}. Skipping...\n")
                 track_lyrics = None
 
         except Exception as e:
-            print(f"An error occurred for song: {track} by {artist}: {e}. Skipping...")
+            print(f"An error occurred for song: {track} by {artist}: {e}. Skipping...\n")
             track_lyrics = None
             break
 
@@ -105,7 +105,8 @@ if __name__ == "__main__":
         tracks_by_genre[genre] = tracks
         lyrics_by_genre[genre] = lyrics
 
-    #print(tracks_by_genre)
+    #for key, value in songs_data.items():
+    #    print(key, value)
     #print(lyrics_by_genre)
     
     write_to_csv(songs_data, csv_file)
