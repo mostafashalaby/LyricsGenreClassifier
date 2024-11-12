@@ -38,8 +38,8 @@ def get_playlist_artist_and_track(sp, playlist_id, genre, songs_data):
         
         artist_track_list.append((artist_name, track_name))
         
-        # Append song data entry with placeholder for lyrics
-        songs_data.append({"genre": genre, "artist": artist_name, "song": track_name, "lyrics": None})
+        # Append song data dictionary with the genre and lyrics
+        songs_data[(artist_name, track_name)] = [genre, None]
 
     return artist_track_list
 
@@ -52,25 +52,22 @@ def get_lyrics_category(genius, artist_track_list, genre, songs_data):
         except Exception as e:
             print(f"An error occurred for song: {track} by {artist}: {e}. Skipping...")
             track_lyrics = None
+            break
 
-        # Update the lyrics dictionary and songs_data list with the fetched lyrics
-        lyrics[track] = track_lyrics
-        
-        for entry in songs_data:
-            if entry["genre"] == genre and entry["artist"] == artist and entry["song"] == track:
-                entry["lyrics"] = track_lyrics
-                break  # Stop searching once the correct entry is updated
+        # Update the lyrics dictionary and songs_data dictionary with the lyrics
+        lyrics[(artist, track)] = track_lyrics
+        songs_data[(artist, track)][0] = genre
+        songs_data[(artist, track)][1] = track_lyrics
+
     return lyrics
 
-def write_to_csv(songs_data):
-    with open('songs_data.csv', mode='w') as file:
-        fieldnames = ['genre', 'artist', 'song', 'lyrics']
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-
-        writer.writeheader()
-        for entry in songs_data:
-            writer.writerow(entry)
-
+def write_to_csv(songs_data, csv_file):
+    with open(csv_file, mode='a', encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow(['artist_name', 'track_name', 'genre', 'lyrics'])
+        for (artist, track), [genre, lyrics] in songs_data.items():
+            writer.writerow([artist, track, genre, lyrics])
+            
     print("Data written to songs_data.csv")
     
 if __name__ == "__main__":
@@ -85,9 +82,10 @@ if __name__ == "__main__":
         "country": '1ebpJj6czDz3RYuhPjElsA'       # COUNTRY HITS TOP 100
     }
 
-    tracks_by_genre = {}
-    lyrics_by_genre = {}
-    songs_data = [] # data to be stored in a csv file
+    csv_file = 'songs_data.csv'     
+    tracks_by_genre = {} # format: {genre: [artist_name, track_name]}
+    lyrics_by_genre = {} # format: {genre: [(artist_name, track_name), lyrics]}
+    songs_data = {} # format: {(artist_name, track_name): [genre, lyrics]}
 
     for genre, playlist_id in genres.items():
         tracks = get_playlist_artist_and_track(sp, playlist_id, genre, songs_data)
@@ -100,4 +98,4 @@ if __name__ == "__main__":
     print(tracks_by_genre)
     print(lyrics_by_genre)
     
-    write_to_csv(songs_data)
+    write_to_csv(songs_data, csv_file)
