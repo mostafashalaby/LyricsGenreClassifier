@@ -105,7 +105,8 @@ if __name__ == "__main__":
         tracks_by_genre[genre] = tracks
         lyrics_by_genre[genre] = lyrics
 
-    #print(tracks_by_genre)
+    #for key, value in songs_data.items():
+    #    print(key, value)
     #print(lyrics_by_genre)
     
     write_to_csv(songs_data, csv_file)
