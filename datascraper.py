@@ -3,6 +3,8 @@ from lyricsgenius import Genius
 import sys
 import os
 import csv
+import time
+import re
 
 from spotipy.oauth2 import SpotifyClientCredentials
 from dotenv import load_dotenv
@@ -33,8 +35,9 @@ def get_playlist_artist_and_track(sp, playlist_id, genre, songs_data):
     tracks = playlist['tracks']['items']
     artist_track_list = []
     for track in tracks:
-        artist_name = track['track']['artists'][0]['name']
-        track_name = track['track']['name']
+        artist_name= track['track']['artists'][0]['name']
+        track_name_unfiltered = track['track']['name']
+        track_name = re.sub(r'\s*-.*$', '', track_name_unfiltered).strip()
         
         artist_track_list.append((artist_name, track_name))
         
@@ -47,8 +50,15 @@ def get_lyrics_category(genius, artist_track_list, genre, songs_data):
     lyrics = {}
     for artist, track in artist_track_list:
         try:
+            time.sleep(1) # Sleep for 1 second to avoid rate limiting
             song = genius.search_song(track, artist)
-            track_lyrics = song.lyrics if song else None
+            if song.lyrics:
+                track_lyrics = song.lyrics
+                print("Lyrics: ", song.lyrics)
+            else:
+                print(f"Lyrics not found for song: {track} by {artist}. Skipping...")
+                track_lyrics = None
+
         except Exception as e:
             print(f"An error occurred for song: {track} by {artist}: {e}. Skipping...")
             track_lyrics = None
@@ -67,7 +77,7 @@ def write_to_csv(songs_data, csv_file):
         writer.writerow(['artist_name', 'track_name', 'genre', 'lyrics'])
         for (artist, track), [genre, lyrics] in songs_data.items():
             writer.writerow([artist, track, genre, lyrics])
-            
+
     print("Data written to songs_data.csv")
     
 if __name__ == "__main__":
@@ -95,7 +105,7 @@ if __name__ == "__main__":
         tracks_by_genre[genre] = tracks
         lyrics_by_genre[genre] = lyrics
 
-    print(tracks_by_genre)
-    print(lyrics_by_genre)
+    #print(tracks_by_genre)
+    #print(lyrics_by_genre)
     
     write_to_csv(songs_data, csv_file)
