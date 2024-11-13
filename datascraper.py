@@ -90,6 +90,8 @@ def get_lyrics_category(genius, artist_track_list, genre, songs_data):
 
         # Update the lyrics dictionary and songs_data dictionary with the lyrics
         if songs_data[(artist, track)][1] is None:
+            track_lyrics = track_lyrics.split("\n")
+            track_lyrics = " ".join(track_lyrics)
             lyrics[(artist, track)] = track_lyrics.strip()
             songs_data[(artist, track)][0] = genre
             songs_data[(artist, track)][1] = track_lyrics
