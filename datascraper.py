@@ -16,6 +16,9 @@ SPOTIPY_CLIENT_ID = ''
 SPOTIPY_CLIENT_SECRET = ''
 
 def init():
+    """
+    Function that initializes the Spotify and Genius API clients using the credentials stored in the .env file.
+    """
     global SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, GENIUS_CLIENT_ACCESS_TOKEN
     
     SPOTIPY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
@@ -31,8 +34,13 @@ def init():
 
     return sp, genius
 
+
 def read_from_csv(csv_file, songs_data):
-    # Check if the file exists before attempting to open it
+    """
+    Function that reads the data from the specified CSV file and stores it in the songs_data dictionary.
+
+    Purpose is to read from the csv file first, to only add entries that do not have lyrics later on.
+    """
     if not os.path.exists(csv_file):
         print(f"File '{csv_file}' does not exist. Skipping read operation.")
         return
@@ -45,6 +53,9 @@ def read_from_csv(csv_file, songs_data):
             songs_data[(artist_name, track_name)] = [genre, lyrics]
 
 def get_playlist_artist_and_track(sp, playlist_id, genre, songs_data):
+    """
+    Function that retrieves the artists and track names from a Spotify playlist
+    """
     playlist = sp.playlist(playlist_id)
     tracks = playlist['tracks']['items']
     artist_track_list = []
@@ -63,24 +74,27 @@ def get_playlist_artist_and_track(sp, playlist_id, genre, songs_data):
 def get_lyrics_category(genius, artist_track_list, genre, songs_data):
     lyrics = {}
     for artist, track in artist_track_list:
-        time.sleep(1) # Sleep for 1 second to avoid rate limiting
-        song = genius.search_song(track, artist)
-        if song.lyrics:
-            track_lyrics = song.lyrics.encode('utf-8', 'ignore').decode('utf-8')
-            print("Lyrics: ", track_lyrics)
-        else:
-            print(f"Lyrics not found for song: {track} by {artist}. Skipping...\n")
-            track_lyrics = None
-        """
+        try:
+            time.sleep(1) # Sleep for 1 second to avoid rate limiting
+            song = genius.search_song(track, artist)
+            if song.lyrics:
+                track_lyrics = song.lyrics.encode('utf-8', 'ignore').decode('utf-8')
+            else:
+                print(f"Lyrics not found for song: {track} by {artist}. Skipping...\n")
+                track_lyrics = None
+        
         except Exception as e:
             print(f"An error occurred for song: {track} by {artist}: {e}. Skipping...\n")
             track_lyrics = None
-            break"""
+            break
 
         # Update the lyrics dictionary and songs_data dictionary with the lyrics
-        lyrics[(artist, track)] = track_lyrics.strip()
-        songs_data[(artist, track)][0] = genre
-        songs_data[(artist, track)][1] = track_lyrics
+        if songs_data[(artist, track)][1] is None:
+            lyrics[(artist, track)] = track_lyrics.strip()
+            songs_data[(artist, track)][0] = genre
+            songs_data[(artist, track)][1] = track_lyrics
+        else:
+            print(f"Lyrics already exist for song: {track} by {artist}. Skipping...\n")
 
     return lyrics
 
@@ -112,7 +126,7 @@ if __name__ == "__main__":
 
     # read from csv file first, to only add entried that do not have lyrics
     read_from_csv(csv_file, songs_data)
-    #for key, value in songs_data.items():
+    #for key, value in songs_data.items():2w
     #    if value[1] is None:
     #        print(key, value)
 
