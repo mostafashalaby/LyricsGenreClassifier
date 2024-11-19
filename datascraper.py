@@ -75,28 +75,26 @@ def get_lyrics_category(genius, artist_track_list, genre, songs_data):
     lyrics = {}
     for artist, track in artist_track_list:
         try:
-            time.sleep(1) # Sleep for 1 second to avoid rate limiting
+            time.sleep(3) # Sleep for 1 second to avoid rate limiting
             song = genius.search_song(track, artist)
             if song.lyrics:
                 track_lyrics = song.lyrics.encode('utf-8', 'ignore').decode('utf-8')
             else:
                 print(f"Lyrics not found for song: {track} by {artist}. Skipping...\n")
                 track_lyrics = None
+
+            if songs_data[(artist, track)][1] is None:
+                track_lyrics = track_lyrics.split("\n")
+                track_lyrics = " ".join(track_lyrics)
+                lyrics[(artist, track)] = track_lyrics.strip()
+                songs_data[(artist, track)][0] = genre
+                songs_data[(artist, track)][1] = track_lyrics
+            else:
+                print(f"Lyrics already exist for song: {track} by {artist}. Skipping...\n")
         
         except Exception as e:
             print(f"An error occurred for song: {track} by {artist}: {e}. Skipping...\n")
             track_lyrics = None
-            break
-
-        # Update the lyrics dictionary and songs_data dictionary with the lyrics
-        if songs_data[(artist, track)][1] is None:
-            track_lyrics = track_lyrics.split("\n")
-            track_lyrics = " ".join(track_lyrics)
-            lyrics[(artist, track)] = track_lyrics.strip()
-            songs_data[(artist, track)][0] = genre
-            songs_data[(artist, track)][1] = track_lyrics
-        else:
-            print(f"Lyrics already exist for song: {track} by {artist}. Skipping...\n")
 
     return lyrics
 
@@ -115,7 +113,7 @@ if __name__ == "__main__":
     # Dictionary of genre names and corresponding Spotify playlist IDs
     genres = {
         "rock": '61jNo7WKLOIQkahju8i0hw',        # 100 Greatest Rock Songs
-        "jazz": '2oVMMLSwywY25Eq9CFxjnC',         # The Jazz100
+        "jazz": '37i9dQZF1DX2kt7dB63bU1',         # Vocal Jazz (100 songs)
         "pop": '2OFfgjs6kj0eA6FNayhAAJ',          # 100 Greatest Pop Songs Ever
         "hip_hop": '37i9dQZF1DXb8wplbC2YhV',      # 100 Greatest Hip-Hop Songs of the Streaming Era
         "country": '1ebpJj6czDz3RYuhPjElsA'       # COUNTRY HITS TOP 100
@@ -133,13 +131,21 @@ if __name__ == "__main__":
     #        print(key, value)
 
     
-    for genre, playlist_id in genres.items():
+    """for genre, playlist_id in genres.items():
+
         tracks = get_playlist_artist_and_track(sp, playlist_id, genre, songs_data)
         lyrics = get_lyrics_category(genius, tracks, genre, songs_data)
         
         # Store the results in dictionaries
         tracks_by_genre[genre] = tracks
-        lyrics_by_genre[genre] = lyrics
+        lyrics_by_genre[genre] = lyrics"""
+
+    tracks = get_playlist_artist_and_track(sp, genres["jazz"], "jazz", songs_data)
+    lyrics = get_lyrics_category(genius, tracks, "jazz", songs_data)
+        
+    # Store the results in dictionaries
+    tracks_by_genre["jazz"] = tracks
+    lyrics_by_genre["jazz"] = lyrics
 
     #for key, value in songs_data.items():
     #    print(key, value)
