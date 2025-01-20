@@ -1,4 +1,4 @@
-![Thumbnail](assets/Thumbnail.png)
+![Thumbnail](assets/cover.png)
 
 # Lyrics Genre Classifier
 
